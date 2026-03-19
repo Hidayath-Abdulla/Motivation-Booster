@@ -3,17 +3,25 @@ import cohere
 from dotenv import load_dotenv
 import os
 
-#Load secret key
+# Load secret key
 load_dotenv()
 api_key = os.getenv("COHERE_API_KEY")
+
+if not api_key:
+    st.error("COHERE_API_KEY not found in your .env file.")
+    st.stop()
+
 co = cohere.Client(api_key)
 
-#Page config
+# Page config
 st.set_page_config(page_title="Motivation Booster", page_icon="💬", layout="centered")
 
-#Header
+# Header
 st.markdown("<h1 style='text-align:center;'>💬 Motivation Booster</h1>", unsafe_allow_html=True)
-st.markdown("<p style='text-align:center; font-size:18px;'>Feeling something? Let us lift you up with words of encouragement.</p>", unsafe_allow_html=True)
+st.markdown(
+    "<p style='text-align:center; font-size:18px;'>Feeling something? Let us lift you up with words of encouragement.</p>",
+    unsafe_allow_html=True
+)
 st.markdown("---")
 
 # Mood selection
@@ -30,25 +38,36 @@ mood = st.selectbox("", [
 st.subheader("📝 What's going on?")
 user_input = st.text_input("", placeholder="e.g. feeling tensed about exams")
 
-#Generate motivation
+# Generate motivation
 st.markdown("###")
 if st.button("💡 Get Motivation", use_container_width=True):
-    if not user_input.strip():
+    if mood == "-- Select Mood --":
+        st.warning("Please select your mood.")
+    elif not user_input.strip():
         st.warning("Please describe your situation.")
     else:
-        prompt = f"Write a short, comforting and realistic motivational message for someone who is {user_input.strip()}."
+        prompt = (
+            f"Write a short, comforting, realistic, and encouraging motivational message "
+            f"for someone who is feeling {mood.lower()} and says: '{user_input.strip()}'. "
+            f"Keep it warm, simple, and under 80 words."
+        )
+
         try:
             response = co.chat(
+                model="command-a-03-2025",
                 message=prompt,
-                model='command-r',
                 temperature=0.9,
                 max_tokens=100
             )
+
             st.success(f"💬 {response.text.strip()}")
+
         except Exception as e:
             st.error(f"Something went wrong: {e}")
 
 # Footer
 st.markdown("---")
-st.markdown("<p style='text-align:center; font-size:12px;'>This space is here to remind you: you're not alone, and you've got this. 💪</p>", unsafe_allow_html=True)
-
+st.markdown(
+    "<p style='text-align:center; font-size:12px;'>This space is here to remind you: you're not alone, and you've got this. 💪</p>",
+    unsafe_allow_html=True
+)
